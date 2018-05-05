@@ -487,7 +487,7 @@ class Client
      */
     private function buildUri($uri, array $parameters)
     {
-        return $uri.(!empty($parameters) ? '?'.http_build_query(compact('folder')) : '');
+        return $uri.(!empty($parameters) ? '?'.http_build_query($parameters) : '');
     }
 
     /**
