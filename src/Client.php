@@ -6,6 +6,7 @@
 
 namespace SyncthingRest;
 
+use Carbon\Carbon;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -35,6 +36,17 @@ class Client
                 ],
             ]
         );
+    }
+
+    /**
+     * @param $time
+     * @return Carbon
+     */
+    public static function convertTime($time)
+    {
+        $time = explode('.', $time);
+
+        return Carbon::parse($time[0].'.'.substr($time[1], 0, 6));
     }
 
     /**
@@ -448,7 +460,6 @@ class Client
 
         return $this->post('db/scan', $parameters);
     }
-
 
     /**
      * @param string $uri
