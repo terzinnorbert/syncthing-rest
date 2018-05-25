@@ -45,8 +45,13 @@ class Client
     public static function convertTime($time)
     {
         $time = explode('.', $time);
+        $parse = $time[0];
 
-        return Carbon::parse($time[0].'.'.substr($time[1], 0, 6));
+        if (array_key_exists(1, $time)) {
+            $parse .= '.'.substr($time[1], 0, 6);
+        }
+
+        return Carbon::parse($parse);
     }
 
     /**
