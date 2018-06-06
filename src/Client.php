@@ -48,7 +48,7 @@ class Client
         $parse = $time[0];
 
         if (array_key_exists(1, $time)) {
-            $parse .= '.'.substr($time[1], 0, 6);
+            $parse .= '.'.(int)substr($time[1], 0, 6);
         }
 
         return Carbon::parse($parse);
