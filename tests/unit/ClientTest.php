@@ -8,6 +8,10 @@ class ClientTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $tester;
+    /**
+     * @var Client
+     */
+    private $client;
 
     /**
      * @dataProvider convertTimeData
@@ -35,8 +39,84 @@ class ClientTest extends \Codeception\Test\Unit
         ];
     }
 
+    /**
+     * @dataProvider getSystemBrowseData
+     * @param $current
+     * @param $expected
+     */
+    public function testGetSystemBrowse($current, $expected)
+    {
+        $this->assertEquals($expected, $this->client->getSystemBrowse($current));
+    }
+
+    public function getSystemBrowseData()
+    {
+        return [
+            [null, ['/']],
+            [
+                '/',
+                [
+                    '/bin/',
+                    '/boot/',
+                    '/dev/',
+                    '/etc/',
+                    '/home/',
+                    '/lib/',
+                    '/lib64/',
+                    '/media/',
+                    '/mnt/',
+                    '/opt/',
+                    '/proc/',
+                    '/root/',
+                    '/run/',
+                    '/sbin/',
+                    '/srv/',
+                    '/sys/',
+                    '/tmp/',
+                    '/usr/',
+                    '/var/',
+                ],
+            ],
+            ['/va', ['/var/']],
+            [
+                '/var/',
+                [
+                    '/var/backups/',
+                    '/var/cache/',
+                    '/var/lib/',
+                    '/var/local/',
+                    '/var/lock/',
+                    '/var/log/',
+                    '/var/mail/',
+                    '/var/opt/',
+                    '/var/run/',
+                    '/var/spool/',
+                    '/var/tmp/',
+                    '/var/www/',
+                ],
+            ],
+        ];
+    }
+
+    public function testGetSystemConfig()
+    {
+        $this->assertEquals(
+            [
+                'version',
+                'folders',
+                'devices',
+                'gui',
+                'options',
+                'ignoredDevices',
+                'ignoredFolders',
+            ],
+            array_keys($this->client->getSystemConfig())
+        );
+    }
+
     protected function _before()
     {
+        $this->client = new Client('http://localhost:8380', 'c180235c30a980484a512472d97f8832');
     }
 
     protected function _after()

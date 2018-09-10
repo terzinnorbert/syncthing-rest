@@ -55,11 +55,12 @@ class Client
     }
 
     /**
+     * @param bool $current
      * @return array
      */
-    public function getSystemBrowse()
+    public function getSystemBrowse($current = null)
     {
-        return $this->get('system/browse');
+        return $this->get('system/browse', $current ? compact('current') : []);
     }
 
     /**
