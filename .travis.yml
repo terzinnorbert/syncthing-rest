@@ -8,4 +8,5 @@ before_install:
 - docker run -v "$(pwd)":/var/www --name rest -d rest
 
 script:
+- docker exec rest composer install
 - docker exec rest vendor/bin/codecept run  --coverage --coverage-xml --coverage-html

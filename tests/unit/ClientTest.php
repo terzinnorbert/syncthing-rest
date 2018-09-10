@@ -114,6 +114,206 @@ class ClientTest extends \Codeception\Test\Unit
         );
     }
 
+
+    public function testPostDbOverride()
+    {
+
+    }
+
+    public function testGetDbNeed()
+    {
+
+    }
+
+    public function testGetSystemPing()
+    {
+        $this->assertEquals(['ping' => 'pong'], $this->client->getSystemPing());
+    }
+
+    public function testPostSystemPing()
+    {
+
+    }
+
+    public function testGetSvcReport()
+    {
+
+    }
+
+    public function testGetSvcRandomString()
+    {
+
+    }
+
+    public function testPostSystemError()
+    {
+
+    }
+
+    public function testPostSystemDebug()
+    {
+
+    }
+
+    public function testGetDbFile()
+    {
+
+    }
+
+    public function testGetSystemConfigInsync()
+    {
+        $this->assertEquals(['configInSync'], array_keys($this->client->getSystemConfigInsync()));
+
+    }
+
+    public function testGetEvents()
+    {
+
+    }
+
+    public function testPostSystemRestart()
+    {
+
+    }
+
+    public function testPostSystemDiscovery()
+    {
+
+    }
+
+    public function testGetStatsDevice()
+    {
+
+    }
+
+    public function testPostSystemConfig()
+    {
+
+    }
+
+    public function testPostDbIgnores()
+    {
+
+    }
+
+    public function testGetSystemLog()
+    {
+        $response = $this->client->getSystemLog();
+        $this->assertEquals(['messages'], array_keys($response));
+        $this->assertEquals(['when', 'message', 'level'], array_keys(current($response['messages'])));
+    }
+
+    public function testGetSystemUpgrade()
+    {
+
+    }
+
+    public function testGetDbBrowse()
+    {
+
+    }
+
+    public function testPostSystemResume()
+    {
+
+    }
+
+    public function testPostDbPrio()
+    {
+
+    }
+
+    public function testGetSvcLang()
+    {
+
+    }
+
+    public function testGetSystemDiscovery()
+    {
+
+        $this->assertTrue(is_array($this->client->getSystemDiscovery()));
+    }
+
+    public function testPostSystemReset()
+    {
+
+    }
+
+    public function testGetDbCompletion()
+    {
+
+    }
+
+    public function testGetDbIgnores()
+    {
+
+    }
+
+    public function testPostSystemErrorClear()
+    {
+
+    }
+
+    public function testPostDbScan()
+    {
+
+    }
+
+    public function testPostSystemPause()
+    {
+
+    }
+
+    public function testGetSystemDebug()
+    {
+        $this->assertEquals(['enabled', 'facilities'], array_keys($this->client->getSystemDebug()));
+    }
+
+    public function testGetSystemStatus()
+    {
+
+    }
+
+    public function testGetDbStatus()
+    {
+
+    }
+
+    public function testGetSystemVersion()
+    {
+
+    }
+
+    public function testGetSystemError()
+    {
+        $this->assertEquals(['errors'], array_keys($this->client->getSystemError()));
+    }
+
+    public function testGetSystemConnections()
+    {
+        $this->assertEquals(['connections', 'total'], array_keys($this->client->getSystemConnections()));
+    }
+
+    public function testGetStatsFolder()
+    {
+
+    }
+
+    public function testPostSystemShutdown()
+    {
+
+    }
+
+    public function testPostSystemUpgrade()
+    {
+
+    }
+
+    public function testGetSvcDeviceid()
+    {
+
+    }
+
     protected function _before()
     {
         $this->client = new Client('http://localhost:8380', 'c180235c30a980484a512472d97f8832');
