@@ -1,9 +1,16 @@
 <?php
 
+use Codeception\Stub\Expected;
+use Codeception\Util\Stub;
 use SyncthingRest\Client;
 
 class ClientTest extends \Codeception\Test\Unit
 {
+    const RESTART_SLEEP = 10;
+    const DEFAULT_FOLDER = 'default';
+    const INVALID_FOLDER = 'invalid';
+    const DEVICE = 'device';
+    const DEVICE_IP = '192.168.0.1';
     /**
      * @var \UnitTester
      */
@@ -117,12 +124,28 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testPostDbOverride()
     {
-
+        $this->client->postDbOverride(self::DEFAULT_FOLDER);
     }
 
     public function testGetDbNeed()
     {
+        $this->assertEquals(
+            [
+                'page',
+                'perpage',
+                'progress',
+                'queued',
+                'rest',
+            ],
+            array_keys($this->client->getDbNeed(self::DEFAULT_FOLDER))
+        );
 
+        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2);
+        $this->assertEquals(2, $response['page']);
+        $this->assertEquals(65536, $response['perpage']);
+        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2, 10);
+        $this->assertEquals(2, $response['page']);
+        $this->assertEquals(10, $response['perpage']);
     }
 
     public function testGetSystemPing()
@@ -132,32 +155,134 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testPostSystemPing()
     {
-
+        $this->assertEquals(['ping' => 'pong'], $this->client->postSystemPing());
     }
 
     public function testGetSvcReport()
     {
-
+        $this->assertEquals(
+            [
+                'alwaysLocalNets',
+                'announce',
+                'blockStats',
+                'cacheIgnoredFiles',
+                'customDefaultFolderPath',
+                'customReleaseURL',
+                'customTempIndexMinBlocks',
+                'customTrafficClass',
+                'deviceUses',
+                'folderMaxFiles',
+                'folderMaxMiB',
+                'folderUses',
+                'folderUsesV3',
+                'guiStats',
+                'hashPerf',
+                'ignoreStats',
+                'limitBandwidthInLan',
+                'longVersion',
+                'memorySize',
+                'memoryUsageMiB',
+                'natType',
+                'numCPU',
+                'numDevices',
+                'numFolders',
+                'overwriteRemoteDeviceNames',
+                'platform',
+                'progressEmitterEnabled',
+                'relays',
+                'rescanIntvs',
+                'restartOnWakeup',
+                'sha256Perf',
+                'temporariesCustom',
+                'temporariesDisabled',
+                'totFiles',
+                'totMiB',
+                'transportStats',
+                'uniqueID',
+                'upgradeAllowedAuto',
+                'upgradeAllowedManual',
+                'upgradeAllowedPre',
+                'uptime',
+                'urVersion',
+                'usesRateLimit',
+                'version',
+            ],
+            array_keys($this->client->getSvcReport())
+        );
     }
 
-    public function testGetSvcRandomString()
+    /**
+     * @dataProvider getSvcRandomStringData
+     * @param $length
+     */
+    public function testGetSvcRandomString($length)
     {
+        $response = $this->client->getSvcRandomString($length);
+        $this->assertTrue(array_key_exists('random', $response));
+        $this->assertEquals($length, strlen($response['random']));
+    }
 
+    public function getSvcRandomStringData()
+    {
+        return [
+            [10],
+            [15],
+            [100],
+        ];
     }
 
     public function testPostSystemError()
     {
-
+        $this->client->postSystemError('test');
+        $response = $this->client->getSystemError();
+        $hasError = false;
+        foreach ($response['errors'] as $error) {
+            if (strpos($error['message'], 'test')) {
+                $hasError = true;
+            }
+        }
+        $this->assertTrue($hasError);
     }
 
     public function testPostSystemDebug()
     {
-
+        $this->assertEmpty($this->client->postSystemDebug(['config'], ['db']));
     }
 
     public function testGetDbFile()
     {
+        $response = $this->client->getDbFile(self::DEFAULT_FOLDER, 'test.txt');
+        $this->assertEquals(
+            [
+                'availability',
+                'global',
+                'local',
+            ],
+            array_keys($response)
+        );
 
+        foreach (['global', 'local'] as $type) {
+            $this->assertEquals(
+                [
+                    'deleted',
+                    'ignored',
+                    'invalid',
+                    'localFlags',
+                    'modified',
+                    'modifiedBy',
+                    'mustRescan',
+                    'name',
+                    'noPermissions',
+                    'numBlocks',
+                    'permissions',
+                    'sequence',
+                    'size',
+                    'type',
+                    'version',
+                ],
+                array_keys($response[$type])
+            );
+        }
     }
 
     public function testGetSystemConfigInsync()
@@ -168,32 +293,53 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testGetEvents()
     {
+        $response = $this->client->getEvents();
+        $this->assertEquals(
+            [
+                'id',
+                'globalID',
+                'time',
+                'type',
+                'data',
+            ],
+            array_keys(current($response))
+        );
 
+        $response = $this->client->getEvents(3);
+        $this->assertEquals(4, current($response)['id']);
+
+        $response = $this->client->getEvents(null, 4);
+        $this->assertEquals(4, count($response));
+
+        $this->assertEmpty($this->client->getEvents(null, null, ['Starting', 'StartupComplete'], 5));
     }
 
     public function testPostSystemRestart()
     {
-
-    }
-
-    public function testPostSystemDiscovery()
-    {
-
+        $this->assertEquals(['ok' => 'restarting'], $this->client->postSystemRestart());
+        sleep(self::RESTART_SLEEP);
     }
 
     public function testGetStatsDevice()
     {
+        $response = $this->client->getStatsDevice();
+        $this->assertTrue(array_key_exists('lastSeen', current($response)));
 
     }
 
     public function testPostSystemConfig()
     {
-
+        $config = $this->client->getSystemConfig();
+        $this->assertEquals(null, $this->client->postSystemConfig($config));
     }
 
     public function testPostDbIgnores()
     {
-
+        $response = $this->client->postDbIgnores(self::DEFAULT_FOLDER, ['test.txt']);
+        $this->assertEquals(['expanded', 'ignore'], array_keys($response));
+        $this->assertCount(1, $response['ignore']);
+        $this->assertCount(4, $response['expanded']);
+        $this->assertEmpty($this->client->postDbIgnores(self::DEFAULT_FOLDER, [])['ignore']);
     }
 
     public function testGetSystemLog()
@@ -205,27 +351,51 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testGetSystemUpgrade()
     {
-
+        $notAllowed = false;
+        try {
+            $this->client->getSystemUpgrade();
+        } catch (\GuzzleHttp\Exception\ServerException $exception) {
+            $notAllowed = true;
+        }
+        $this->assertTrue($notAllowed);
     }
 
     public function testGetDbBrowse()
     {
-
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER);
+        $this->assertEquals(['test', 'test.txt'], array_keys($response));
+        $this->assertEmpty($response['test']);
+        $this->assertCount(2, $response['test.txt']);
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 1);
+        $this->assertEquals(['subtest.txt'], array_keys($response['test']));
+        $this->assertEquals(['subtest.txt'], array_keys($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test')));
+        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'te'));
+        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'a'));
     }
 
     public function testPostSystemResume()
     {
-
+        $this->client->postSystemResume();
+        sleep(self::RESTART_SLEEP);
     }
 
     public function testPostDbPrio()
     {
-
+        $this->assertEquals(
+            [
+                'page',
+                'perpage',
+                'progress',
+                'queued',
+                'rest',
+            ],
+            array_keys($this->client->postDbPrio(self::DEFAULT_FOLDER, 'test.txt'))
+        );
     }
 
     public function testGetSvcLang()
     {
-
+        $this->assertTrue(is_array($this->client->getSvcLang()));
     }
 
     public function testGetSystemDiscovery()
@@ -236,32 +406,61 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testPostSystemReset()
     {
-
+        $this->assertTrue(array_key_exists('ok', $this->client->postSystemReset()));
+        sleep(self::RESTART_SLEEP);
+        $this->assertTrue(array_key_exists('ok', $this->client->postSystemReset(self::DEFAULT_FOLDER)));
+        sleep(self::RESTART_SLEEP);
+        $notAllowed = false;
+        try {
+            $this->client->postSystemReset(self::INVALID_FOLDER);
+        } catch (\GuzzleHttp\Exception\ServerException $exception) {
+            $notAllowed = true;
+        }
+        $this->assertTrue($notAllowed);
     }
 
     public function testGetDbCompletion()
     {
-
+        $myId = $this->client->getSystemStatus()['myID'];
+        $this->assertEquals(
+            [
+                'completion',
+                'globalBytes',
+                'needBytes',
+                'needDeletes',
+                'needItems',
+            ],
+            array_keys($this->client->getDbCompletion($myId, self::DEFAULT_FOLDER))
+        );
     }
 
     public function testGetDbIgnores()
     {
-
+        $this->assertEquals(
+            [
+                'expanded',
+                'ignore',
+            ],
+            array_keys($this->client->getDbIgnores(self::DEFAULT_FOLDER))
+        );
     }
 
     public function testPostSystemErrorClear()
     {
-
+        $this->assertEquals(null, $this->client->postSystemErrorClear());
     }
 
     public function testPostDbScan()
     {
-
+        $this->assertEmpty($this->client->postDbScan());
+        $this->assertEmpty($this->client->postDbScan(self::DEFAULT_FOLDER));
+        $this->assertEmpty($this->client->postDbScan(self::DEFAULT_FOLDER, '/test'));
+        $this->assertEmpty($this->client->postDbScan(self::DEFAULT_FOLDER, '/test', 10));
     }
 
     public function testPostSystemPause()
     {
-
+        $this->assertEmpty($this->client->postSystemPause());
     }
 
     public function testGetSystemDebug()
@@ -271,17 +470,72 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testGetSystemStatus()
     {
-
+        $this->assertEquals(
+            [
+                'alloc',
+                'connectionServiceStatus',
+                'cpuPercent',
+                'discoveryEnabled',
+                'discoveryErrors',
+                'discoveryMethods',
+                'goroutines',
+                'myID',
+                'pathSeparator',
+                'startTime',
+                'sys',
+                'tilde',
+                'uptime',
+                'urVersionMax',
+            ],
+            array_keys($this->client->getSystemStatus())
+        );
     }
 
     public function testGetDbStatus()
     {
-
+        $this->assertEquals(
+            [
+                'globalBytes',
+                'globalDeleted',
+                'globalDirectories',
+                'globalFiles',
+                'globalSymlinks',
+                'ignorePatterns',
+                'inSyncBytes',
+                'inSyncFiles',
+                'invalid',
+                'localBytes',
+                'localDeleted',
+                'localDirectories',
+                'localFiles',
+                'localSymlinks',
+                'needBytes',
+                'needDeletes',
+                'needDirectories',
+                'needFiles',
+                'needSymlinks',
+                'pullErrors',
+                'sequence',
+                'state',
+                'stateChanged',
+                'version',
+            ],
+            array_keys($this->client->getDbStatus(self::DEFAULT_FOLDER))
+        );
     }
 
     public function testGetSystemVersion()
     {
-
+        $this->assertEquals(
+            [
+                'arch',
+                'codename',
+                'longVersion',
+                'os',
+                'version',
+            ],
+            array_keys($this->client->getSystemVersion())
+        );
     }
 
     public function testGetSystemError()
@@ -296,22 +550,45 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testGetStatsFolder()
     {
-
-    }
-
-    public function testPostSystemShutdown()
-    {
-
+        $response = $this->client->getStatsFolder();
+        $this->assertTrue(array_key_exists(self::DEFAULT_FOLDER, $response));
+        $this->assertEquals(['lastFile', 'lastScan'], array_keys($response[self::DEFAULT_FOLDER]));
     }
 
     public function testPostSystemUpgrade()
     {
-
+        $notAllowed = false;
+        try {
+            $this->client->postSystemUpgrade();
+        } catch (\GuzzleHttp\Exception\ServerException $exception) {
+            $notAllowed = true;
+        }
+        $this->assertTrue($notAllowed);
     }
 
     public function testGetSvcDeviceid()
     {
+        $myId = $this->client->getSystemStatus()['myID'];
+        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceid('123')));
+        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceid($myId));
+    }
 
+    public function testPostSystemShutdown()
+    {
+        $client = Stub::makeEmptyExcept(
+            Client::class,
+            'postSystemShutdown',
+            [
+                'post' => Expected::once(
+                    function ($value) {
+                        $this->assertEquals('system/shutdown', $value);
+                    }
+                ),
+            ],
+            $this
+        );
+
+        $client->postSystemShutdown();
     }
 
     protected function _before()

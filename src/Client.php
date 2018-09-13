@@ -232,9 +232,10 @@ class Client
      * @param int $since
      * @param int $limit
      * @param string[] $events
+     * @param int $timeout
      * @return array
      */
-    public function getEvents($since = null, $limit = null, $events = [])
+    public function getEvents($since = null, $limit = null, $events = [], $timeout = 60)
     {
         $parameters = [];
         if (!is_null($since)) {
@@ -245,6 +246,7 @@ class Client
         }
         if (!empty($events)) {
             $parameters['events'] = implode(',', $events);
+            $parameters['timeout'] = $timeout;
         }
 
         return $this->get('events', $parameters);
@@ -306,6 +308,13 @@ class Client
      */
     public function postSystemConfig(array $config)
     {
+        //cannot unmarshal array into Go struct field VersioningConfiguration.params of type map[string]string fix
+        foreach ($config['folders'] as &$folder) {
+            if (array_key_exists('versioning', $folder) && empty($folder['versioning']['type'])) {
+                unset($folder['versioning']);
+            }
+        }
+
         return $this->post('system/config', [], $config);
     }
 
@@ -325,16 +334,6 @@ class Client
         }
 
         return $this->post('system/debug', $parameters);
-    }
-
-    /**
-     * @param string $device
-     * @param string $addr
-     * @return array
-     */
-    public function postSystemDiscovery($device, $addr)
-    {
-        return $this->post('system/discovery', compact('device', 'addr'));
     }
 
     /**
@@ -454,9 +453,12 @@ class Client
      * @param null $next
      * @return array
      */
-    public function postDbScan($folder, $sub = null, $next = null)
+    public function postDbScan($folder = null, $sub = null, $next = null)
     {
-        $parameters = compact('folder');
+        $parameters = [];
+        if (!is_null($folder)) {
+            $parameters = compact('folder');
+        }
         if (!is_null($sub)) {
             $parameters['sub'] = $sub;
         }
