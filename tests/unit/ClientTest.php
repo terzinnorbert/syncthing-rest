@@ -1,10 +1,12 @@
 <?php
 
 use Codeception\Stub\Expected;
+use Codeception\Test\Unit;
 use Codeception\Util\Stub;
+use GuzzleHttp\Exception\ServerException;
 use SyncthingRest\Client;
 
-class ClientTest extends \Codeception\Test\Unit
+class ClientTest extends Unit
 {
     const RESTART_SLEEP = 10;
     const DEFAULT_FOLDER = 'default';
@@ -12,7 +14,7 @@ class ClientTest extends \Codeception\Test\Unit
     const DEVICE = 'device';
     const DEVICE_IP = '192.168.0.1';
     /**
-     * @var \UnitTester
+     * @var UnitTester
      */
     protected $tester;
     /**
@@ -355,7 +357,7 @@ class ClientTest extends \Codeception\Test\Unit
         $notAllowed = false;
         try {
             $this->client->getSystemUpgrade();
-        } catch (\GuzzleHttp\Exception\ServerException $exception) {
+        } catch (ServerException $exception) {
             $notAllowed = true;
         }
         $this->assertTrue($notAllowed);
@@ -414,7 +416,7 @@ class ClientTest extends \Codeception\Test\Unit
         $notAllowed = false;
         try {
             $this->client->postSystemReset(self::INVALID_FOLDER);
-        } catch (\GuzzleHttp\Exception\ServerException $exception) {
+        } catch (ServerException $exception) {
             $notAllowed = true;
         }
         $this->assertTrue($notAllowed);
@@ -497,11 +499,13 @@ class ClientTest extends \Codeception\Test\Unit
     {
         $this->assertEquals(
             [
+                'errors',
                 'globalBytes',
                 'globalDeleted',
                 'globalDirectories',
                 'globalFiles',
                 'globalSymlinks',
+                'globalTotalItems',
                 'ignorePatterns',
                 'inSyncBytes',
                 'inSyncFiles',
@@ -511,11 +515,13 @@ class ClientTest extends \Codeception\Test\Unit
                 'localDirectories',
                 'localFiles',
                 'localSymlinks',
+                'localTotalItems',
                 'needBytes',
                 'needDeletes',
                 'needDirectories',
                 'needFiles',
                 'needSymlinks',
+                'needTotalItems',
                 'pullErrors',
                 'sequence',
                 'state',
@@ -532,6 +538,9 @@ class ClientTest extends \Codeception\Test\Unit
             [
                 'arch',
                 'codename',
+                'isBeta',
+                'isCandidate',
+                'isRelease',
                 'longVersion',
                 'os',
                 'version',
@@ -562,7 +571,7 @@ class ClientTest extends \Codeception\Test\Unit
         $notAllowed = false;
         try {
             $this->client->postSystemUpgrade();
-        } catch (\GuzzleHttp\Exception\ServerException $exception) {
+        } catch (ServerException $exception) {
             $notAllowed = true;
         }
         $this->assertTrue($notAllowed);
