@@ -113,9 +113,10 @@ class ClientTest extends \Codeception\Test\Unit
                 'folders',
                 'devices',
                 'gui',
+                'ldap',
                 'options',
-                'ignoredDevices',
-                'ignoredFolders',
+                'remoteIgnoredDevices',
+                'pendingDevices',
             ],
             array_keys($this->client->getSystemConfig())
         );
@@ -479,6 +480,7 @@ class ClientTest extends \Codeception\Test\Unit
                 'discoveryErrors',
                 'discoveryMethods',
                 'goroutines',
+                'guiAddressOverridden',
                 'myID',
                 'pathSeparator',
                 'startTime',
