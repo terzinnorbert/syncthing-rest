@@ -25,6 +25,7 @@ class ClientTest extends Unit
     /**
      * @dataProvider convertTimeData
      * @param $time
+     * @param $expected
      */
     public function testConvertTime($time, $expected)
     {
@@ -128,6 +129,11 @@ class ClientTest extends Unit
     public function testPostDbOverride()
     {
         $this->client->postDbOverride(self::DEFAULT_FOLDER);
+    }
+
+    public function testPostDbRevert()
+    {
+        $this->client->postDbRevert(self::DEFAULT_FOLDER);
     }
 
     public function testGetDbNeed()
@@ -577,11 +583,11 @@ class ClientTest extends Unit
         $this->assertTrue($notAllowed);
     }
 
-    public function testGetSvcDeviceid()
+    public function testGetSvcDeviceId()
     {
         $myId = $this->client->getSystemStatus()['myID'];
-        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceid('123')));
-        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceid($myId));
+        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceId('123')));
+        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceId($myId));
     }
 
     public function testPostSystemShutdown()
