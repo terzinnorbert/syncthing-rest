@@ -489,6 +489,8 @@ class ClientTest extends Unit
                 'discoveryMethods',
                 'goroutines',
                 'guiAddressOverridden',
+                'guiAddressUsed',
+                'lastDialStatus',
                 'myID',
                 'pathSeparator',
                 'startTime',
