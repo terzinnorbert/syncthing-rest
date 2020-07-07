@@ -20,7 +20,8 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "codeception/codeception": "^2.4"
+        "codeception/codeception": "^4.0",
+        "codeception/module-asserts": "^1.2"
     },
     "scripts": {
         "test": "vendor/bin/codecept run unit"
