@@ -8,6 +8,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -
     php7.2-tidy php7.2-curl php7.2-xdebug php7.2-zip && \
     curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer && \
     a2enmod rewrite expires && \
+    update-alternatives --set php /usr/bin/php7.2 && \
     apt-get clean
 
 RUN curl -s https://syncthing.net/release-key.txt | apt-key add - && \
