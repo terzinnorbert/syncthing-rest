@@ -588,6 +588,6 @@ class ClientTest extends TestCase
 
     public function setUp()
     {
-        $this->client = new Client('http://localhost:8380', 'c180235c30a980484a512472d97f8832');
+        $this->client = new Client('http://172.22.0.6:8384', 'mQRkYP3dhVbwz2tcVzXAGLMsNpjkrSuT');
     }
 }
