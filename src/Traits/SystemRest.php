@@ -3,6 +3,12 @@
 namespace SyncthingRest\Traits;
 
 
+use SyncthingRest\Responses\SystemConfig;
+use SyncthingRest\Responses\SystemConnections;
+use SyncthingRest\Responses\SystemDebug;
+use SyncthingRest\Responses\SystemError;
+use SyncthingRest\Responses\SystemLog;
+
 trait SystemRest
 {
     /**
@@ -15,11 +21,11 @@ trait SystemRest
     }
 
     /**
-     * @return array
+     * @return SystemConfig
      */
     public function getSystemConfig()
     {
-        return $this->get('system/config');
+        return new SystemConfig($this->get('system/config'));
     }
 
     /**
@@ -31,19 +37,19 @@ trait SystemRest
     }
 
     /**
-     * @return array
+     * @return SystemConnections
      */
     public function getSystemConnections()
     {
-        return $this->get('system/connections');
+        return new SystemConnections($this->get('system/connections'));
     }
 
     /**
-     * @return array
+     * @return SystemDebug
      */
     public function getSystemDebug()
     {
-        return $this->get('system/debug');
+        return new SystemDebug($this->get('system/debug'));
     }
 
     /**
@@ -55,19 +61,19 @@ trait SystemRest
     }
 
     /**
-     * @return array
+     * @return SystemError
      */
     public function getSystemError()
     {
-        return $this->get('system/error');
+        return new SystemError($this->get('system/error'));
     }
 
     /**
-     * @return array
+     * @return SystemLog
      */
     public function getSystemLog()
     {
-        return $this->get('system/log');
+        return new SystemLog($this->get('system/log'));
     }
 
     /**

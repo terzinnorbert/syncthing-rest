@@ -72,9 +72,7 @@ class ClientTest extends Unit
                     '/etc/',
                     '/home/',
                     '/lib/',
-                    '/lib32/',
                     '/lib64/',
-                    '/libx32/',
                     '/media/',
                     '/mnt/',
                     '/opt/',
@@ -614,7 +612,7 @@ class ClientTest extends Unit
 
     protected function _before()
     {
-        $this->client = new Client('http://localhost:8380', 'c180235c30a980484a512472d97f8832');
+        $this->client = new Client('http://172.22.0.6:8384', 'mQRkYP3dhVbwz2tcVzXAGLMsNpjkrSuT');
     }
 
     protected function _after()
