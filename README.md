@@ -1,11 +1,18 @@
 # Syncthing REST Client
 
-The Client implements the Syncthing provided REST API calls: https://docs.syncthing.net/dev/rest.html
+The Client implements the Syncthing provided REST API calls: https://docs.syncthing.net/dev/rest.html  
+The v0.x versions provide simple array responses and the v1.x versions have well-documented response objects.
 
 ## Install
 
+Array response version:
 ```
-composer require terzinnorbert/syncthing-php
+composer require terzinnorbert/syncthing-php:~0.4
+```
+
+Object response version:
+```
+WIP
 ```
 
 ## Usage
