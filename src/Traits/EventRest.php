@@ -2,6 +2,8 @@
 
 namespace SyncthingRest\Traits;
 
+use SyncthingRest\Responses\Events\Event;
+
 trait EventRest
 {
     /**
@@ -9,7 +11,7 @@ trait EventRest
      * @param int      $limit
      * @param string[] $events
      * @param int      $timeout
-     * @return array
+     * @return Event[]
      */
     public function getEvents($since = null, $limit = null, $events = [], $timeout = 60)
     {
@@ -25,6 +27,8 @@ trait EventRest
             $parameters['timeout'] = $timeout;
         }
 
-        return $this->get('events', $parameters);
+        return array_map(static function ($event) {
+            return new Event($event);
+        }, $this->get('events', $parameters));
     }
 }
