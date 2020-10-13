@@ -2,6 +2,9 @@
 
 namespace SyncthingRest\Traits;
 
+use SyncthingRest\Responses\Stats\Device;
+use SyncthingRest\Responses\Stats\Folder;
+
 trait StatisticsRest
 {
     /**
@@ -9,7 +12,11 @@ trait StatisticsRest
      */
     public function getStatsDevice()
     {
-        return $this->get('stats/device');
+        $devices = $this->get('stats/device');
+        return array_map(static function ($deviceID, $device) {
+            $device['deviceID'] = $deviceID;
+            return new Device($device);
+        }, array_keys($devices), $devices);
     }
 
     /**
@@ -17,7 +24,11 @@ trait StatisticsRest
      */
     public function getStatsFolder()
     {
-        return $this->get('stats/folder');
+        $folders = $this->get('stats/folder');
+        return array_map(static function ($folderID, $folder) {
+            $folder['folderID'] = $folderID;
+            return new Folder($folder);
+        }, array_keys($folders), $folders);
     }
 
 }
