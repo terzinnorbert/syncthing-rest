@@ -2,15 +2,18 @@
 
 namespace SyncthingRest\Traits;
 
+use SyncthingRest\Responses\SvcDeviceId;
+use SyncthingRest\Responses\SvcReport;
+
 trait ServiceRest
 {
     /**
      * @param string $id
-     * @return array
+     * @return SvcDeviceId
      */
-    public function getSvcDeviceId($id)
+    public function getSvcDeviceId($id): SvcDeviceId
     {
-        return $this->get('svc/deviceid', compact('id'));
+        return new SvcDeviceId($this->get('svc/deviceid', compact('id')));
     }
 
     /**
@@ -27,14 +30,15 @@ trait ServiceRest
      */
     public function getSvcRandomString($length = 20)
     {
-        return $this->get('svc/random/string', compact('length'));
+        $response = $this->get('svc/random/string', compact('length'));
+        return $response ? $response['random'] : null;
     }
 
     /**
-     * @return array
+     * @return SvcReport
      */
-    public function getSvcReport()
+    public function getSvcReport(): SvcReport
     {
-        return $this->get('svc/report');
+        return new SvcReport($this->get('svc/report'));
     }
 }
