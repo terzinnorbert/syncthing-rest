@@ -2,13 +2,20 @@
 
 namespace SyncthingRest\Traits;
 
+use SyncthingRest\Responses\DbBrowse;
+use SyncthingRest\Responses\DbCompletion;
+use SyncthingRest\Responses\DbFile;
+use SyncthingRest\Responses\DbIgnores;
+use SyncthingRest\Responses\DbNeed;
+use SyncthingRest\Responses\DbStatus;
+
 trait DatabaseRest
 {
     /**
      * @param string $folder
      * @param int    $levels
      * @param string $prefix
-     * @return array
+     * @return DbBrowse
      */
     public function getDbBrowse($folder, $levels = 0, $prefix = '')
     {
@@ -17,45 +24,52 @@ trait DatabaseRest
             $parameters['prefix'] = $prefix;
         }
 
-        return $this->get('db/browse', $parameters);
+        return new DbBrowse($this->get('db/browse', $parameters));
     }
 
     /**
      * @param string $device
      * @param string $folder
-     * @return array
+     * @return DbCompletion
      */
-    public function getDbCompletion($device, $folder)
+    public function getDbCompletion($device = null, $folder = null): DbCompletion
     {
-        return $this->get('db/completion', compact('device', 'folder'));
+        $parameters = [];
+        if (!empty($device)) {
+            $parameters['device'] = $device;
+        }
+        if (!empty($folder)) {
+            $parameters['folder'] = $folder;
+        }
+        return new DbCompletion($this->get('db/completion', $parameters));
     }
 
     /**
      * @param string $folder
      * @param string $file
-     * @return array
+     * @return DbFile
      */
-    public function getDbFile($folder, $file)
+    public function getDbFile($folder, $file): DbFile
     {
-        return $this->get('db/file', compact('folder', 'file'));
+        return new DbFile($this->get('db/file', compact('folder', 'file')));
     }
 
     /**
      * @param string $folder
-     * @return array
+     * @return DbIgnores
      */
-    public function getDbIgnores($folder)
+    public function getDbIgnores($folder): DbIgnores
     {
-        return $this->get('db/ignores', compact('folder'));
+        return new DbIgnores($this->get('db/ignores', compact('folder')));
     }
 
     /**
      * @param string $folder
      * @param int    $page
      * @param int    $perPage
-     * @return array
+     * @return DbNeed
      */
-    public function getDbNeed($folder, $page = null, $perPage = null)
+    public function getDbNeed($folder, $page = null, $perPage = null): DbNeed
     {
         $parameters = compact('folder');
         if (!is_null($page)) {
@@ -65,16 +79,16 @@ trait DatabaseRest
             $parameters['perpage'] = $perPage;
         }
 
-        return $this->get('db/need', $parameters);
+        return new DbNeed($this->get('db/need', $parameters));
     }
 
     /**
      * @param string $folder
-     * @return array
+     * @return DbStatus
      */
-    public function getDbStatus($folder)
+    public function getDbStatus($folder): DbStatus
     {
-        return $this->get('db/status', compact('folder'));
+        return new DbStatus($this->get('db/status', compact('folder')));
     }
 
     /**
