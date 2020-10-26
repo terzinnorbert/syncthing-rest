@@ -9,4 +9,4 @@ before_install:
 
 script:
 - docker exec rest composer install
-- docker exec rest vendor/bin/codecept run  --coverage --coverage-xml --coverage-html
+- docker exec rest composer test

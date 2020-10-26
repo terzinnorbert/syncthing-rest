@@ -1,22 +1,16 @@
 <?php
 
-use Codeception\Stub\Expected;
-use Codeception\Test\Unit;
-use Codeception\Util\Stub;
+use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Exception\ServerException;
 use SyncthingRest\Client;
 
-class ClientTest extends Unit
+class ClientTest extends TestCase
 {
     const RESTART_SLEEP = 10;
     const DEFAULT_FOLDER = 'default';
     const INVALID_FOLDER = 'invalid';
     const DEVICE = 'device';
     const DEVICE_IP = '192.168.0.1';
-    /**
-     * @var UnitTester
-     */
-    protected $tester;
     /**
      * @var Client
      */
@@ -72,9 +66,7 @@ class ClientTest extends Unit
                     '/etc/',
                     '/home/',
                     '/lib/',
-                    '/lib32/',
                     '/lib64/',
-                    '/libx32/',
                     '/media/',
                     '/mnt/',
                     '/opt/',
@@ -594,30 +586,8 @@ class ClientTest extends Unit
         $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceId($myId));
     }
 
-    public function testPostSystemShutdown()
-    {
-        $client = Stub::makeEmptyExcept(
-            Client::class,
-            'postSystemShutdown',
-            [
-                'post' => Expected::once(
-                    function ($value) {
-                        $this->assertEquals('system/shutdown', $value);
-                    }
-                ),
-            ],
-            $this
-        );
-
-        $client->postSystemShutdown();
-    }
-
-    protected function _before()
+    public function setUp()
     {
         $this->client = new Client('http://localhost:8380', 'c180235c30a980484a512472d97f8832');
-    }
-
-    protected function _after()
-    {
     }
 }
