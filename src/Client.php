@@ -21,7 +21,7 @@ class Client
 {
     const REST_SUFFIX = '/rest/';
     /**
-     * @var Client
+     * @var \GuzzleHttp\Client
      */
     private $curl;
     use DatabaseRest;
