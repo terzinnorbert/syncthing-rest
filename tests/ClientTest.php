@@ -65,6 +65,7 @@ class ClientTest extends TestCase
                     '/dev/',
                     '/etc/',
                     '/home/',
+                    '/laravel-installer/',
                     '/lib/',
                     '/lib64/',
                     '/media/',
@@ -113,12 +114,11 @@ class ClientTest extends TestCase
                 'ldap',
                 'options',
                 'remoteIgnoredDevices',
-                'pendingDevices',
+                'defaults',
             ],
             array_keys($this->client->getSystemConfig())
         );
     }
-
 
     public function testPostDbOverride()
     {
@@ -165,50 +165,34 @@ class ClientTest extends TestCase
     {
         $this->assertEquals(
             [
-                'alwaysLocalNets',
-                'announce',
-                'blockStats',
-                'cacheIgnoredFiles',
-                'customDefaultFolderPath',
-                'customReleaseURL',
-                'customTempIndexMinBlocks',
-                'customTrafficClass',
-                'deviceUses',
-                'folderMaxFiles',
-                'folderMaxMiB',
-                'folderUses',
-                'folderUsesV3',
-                'guiStats',
-                'hashPerf',
-                'ignoreStats',
-                'limitBandwidthInLan',
+                'version',
                 'longVersion',
-                'memorySize',
-                'memoryUsageMiB',
-                'natType',
-                'numCPU',
-                'numDevices',
-                'numFolders',
-                'overwriteRemoteDeviceNames',
                 'platform',
-                'progressEmitterEnabled',
+                'numFolders',
+                'numDevices',
+                'totFiles',
+                'folderMaxFiles',
+                'memoryUsageMiB',
+                'sha256Perf',
+                'hashPerf',
+                'memorySize',
+                'urVersion',
+                'numCPU',
+                'folderUses',
+                'deviceUses',
+                'announce',
                 'relays',
                 'rescanIntvs',
-                'restartOnWakeup',
-                'sha256Perf',
-                'temporariesCustom',
-                'temporariesDisabled',
-                'totFiles',
-                'totMiB',
-                'transportStats',
-                'uniqueID',
-                'upgradeAllowedAuto',
-                'upgradeAllowedManual',
-                'upgradeAllowedPre',
                 'uptime',
-                'urVersion',
-                'usesRateLimit',
-                'version',
+                'natType',
+                'progressEmitterEnabled',
+                'customReleaseURL',
+                'restartOnWakeup',
+                'folderUsesV3',
+                'deviceUsesV3',
+                'guiStats',
+                'blockStats',
+                'ignoreStats',
             ],
             array_keys($this->client->getSvcReport())
         );
@@ -260,6 +244,7 @@ class ClientTest extends TestCase
                 'availability',
                 'global',
                 'local',
+                'mtime',
             ],
             array_keys($response)
         );
@@ -291,7 +276,6 @@ class ClientTest extends TestCase
     public function testGetSystemConfigInsync()
     {
         $this->assertEquals(['configInSync'], array_keys($this->client->getSystemConfigInsync()));
-
     }
 
     public function testGetEvents()
@@ -327,7 +311,6 @@ class ClientTest extends TestCase
     {
         $response = $this->client->getStatsDevice();
         $this->assertTrue(array_key_exists('lastSeen', current($response)));
-
     }
 
     public function testPostSystemConfig()
@@ -339,7 +322,7 @@ class ClientTest extends TestCase
     public function testPostDbIgnores()
     {
         $response = $this->client->postDbIgnores(self::DEFAULT_FOLDER, ['test.txt']);
-        $this->assertEquals(['expanded', 'ignore'], array_keys($response));
+        $this->assertEquals(['error', 'expanded', 'ignore'], array_keys($response));
         $this->assertCount(1, $response['ignore']);
         $this->assertCount(4, $response['expanded']);
         $this->assertEmpty($this->client->postDbIgnores(self::DEFAULT_FOLDER, [])['ignore']);
@@ -366,12 +349,12 @@ class ClientTest extends TestCase
     public function testGetDbBrowse()
     {
         $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER);
-        $this->assertEquals(['test', 'test.txt'], array_keys($response));
-        $this->assertEmpty($response['test']);
-        $this->assertCount(2, $response['test.txt']);
-        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 1);
-        $this->assertEquals(['subtest.txt'], array_keys($response['test']));
-        $this->assertEquals(['subtest.txt'], array_keys($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test')));
+        $this->assertEquals(['test', 'test.txt'], array_column($response, 'name'));
+        $this->assertCount(4, $response[1]);
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 2);
+        $this->assertEquals(['test', 'test.txt'], array_column($response, 'name'));
+        $this->assertEquals('subtest.txt', $response[0]['children'][0]['name']);
+        $this->assertEquals(['subtest.txt'], array_column($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test'), 'name'));
         $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'te'));
         $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'a'));
     }
@@ -409,17 +392,15 @@ class ClientTest extends TestCase
 
     public function testPostSystemReset()
     {
-        $this->assertTrue(array_key_exists('ok', $this->client->postSystemReset()));
-        sleep(self::RESTART_SLEEP);
-        $this->assertTrue(array_key_exists('ok', $this->client->postSystemReset(self::DEFAULT_FOLDER)));
-        sleep(self::RESTART_SLEEP);
-        $notAllowed = false;
-        try {
-            $this->client->postSystemReset(self::INVALID_FOLDER);
-        } catch (ServerException $exception) {
-            $notAllowed = true;
+        foreach ([null, self::INVALID_FOLDER] as $folder) {
+            $notAllowed = false;
+            try {
+                $this->client->postSystemReset($folder);
+            } catch (ServerException $exception) {
+                $notAllowed = true;
+            }
+            $this->assertTrue($notAllowed);
         }
-        $this->assertTrue($notAllowed);
     }
 
     public function testGetDbCompletion()
@@ -429,9 +410,11 @@ class ClientTest extends TestCase
             [
                 'completion',
                 'globalBytes',
+                'globalItems',
                 'needBytes',
                 'needDeletes',
                 'needItems',
+                'sequence',
             ],
             array_keys($this->client->getDbCompletion($myId, self::DEFAULT_FOLDER))
         );
@@ -441,6 +424,7 @@ class ClientTest extends TestCase
     {
         $this->assertEquals(
             [
+                'error',
                 'expanded',
                 'ignore',
             ],
@@ -481,6 +465,7 @@ class ClientTest extends TestCase
                 'discoveryEnabled',
                 'discoveryErrors',
                 'discoveryMethods',
+                'discoveryStatus',
                 'goroutines',
                 'guiAddressOverridden',
                 'guiAddressUsed',
@@ -540,11 +525,15 @@ class ClientTest extends TestCase
             [
                 'arch',
                 'codename',
+                'date',
                 'isBeta',
                 'isCandidate',
                 'isRelease',
                 'longVersion',
                 'os',
+                'stamp',
+                'tags',
+                'user',
                 'version',
             ],
             array_keys($this->client->getSystemVersion())
