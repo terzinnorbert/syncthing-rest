@@ -118,6 +118,11 @@ trait SystemRest
                 unset($folder['versioning']);
             }
         }
+        unset($folder);
+
+        if (isset($config['defaults']['folder']['versioning'])) {
+            unset($config['defaults']['folder']['versioning']);
+        }
 
         return $this->post('system/config', [], $config);
     }
