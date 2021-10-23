@@ -1,22 +1,16 @@
 <?php
 
-use Codeception\Stub\Expected;
-use Codeception\Test\Unit;
-use Codeception\Util\Stub;
+use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Exception\ServerException;
 use SyncthingRest\Client;
 
-class ClientTest extends Unit
+class ClientTest extends TestCase
 {
     const RESTART_SLEEP = 10;
     const DEFAULT_FOLDER = 'default';
     const INVALID_FOLDER = 'invalid';
     const DEVICE = 'device';
     const DEVICE_IP = '192.168.0.1';
-    /**
-     * @var UnitTester
-     */
-    protected $tester;
     /**
      * @var Client
      */
@@ -71,6 +65,7 @@ class ClientTest extends Unit
                     '/dev/',
                     '/etc/',
                     '/home/',
+                    '/laravel-installer/',
                     '/lib/',
                     '/lib64/',
                     '/media/',
@@ -110,6 +105,7 @@ class ClientTest extends Unit
 
     public function testGetSystemConfig()
     {
+        $config = $this->client->getSystemConfig();
         $this->assertEquals(
             [
                 'version',
@@ -119,12 +115,11 @@ class ClientTest extends Unit
                 'ldap',
                 'options',
                 'remoteIgnoredDevices',
-                'pendingDevices',
+                'defaults',
             ],
-            array_keys($this->client->getSystemConfig())
+            array_keys($config->toArray())
         );
     }
-
 
     public function testPostDbOverride()
     {
@@ -146,13 +141,13 @@ class ClientTest extends Unit
                 'queued',
                 'rest',
             ],
-            array_keys($this->client->getDbNeed(self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbNeed(self::DEFAULT_FOLDER)->toArray())
         );
 
-        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2);
+        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2)->toArray();
         $this->assertEquals(2, $response['page']);
         $this->assertEquals(65536, $response['perpage']);
-        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2, 10);
+        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2, 10)->toArray();
         $this->assertEquals(2, $response['page']);
         $this->assertEquals(10, $response['perpage']);
     }
@@ -171,52 +166,36 @@ class ClientTest extends Unit
     {
         $this->assertEquals(
             [
-                'alwaysLocalNets',
-                'announce',
-                'blockStats',
-                'cacheIgnoredFiles',
-                'customDefaultFolderPath',
-                'customReleaseURL',
-                'customTempIndexMinBlocks',
-                'customTrafficClass',
-                'deviceUses',
-                'folderMaxFiles',
-                'folderMaxMiB',
-                'folderUses',
-                'folderUsesV3',
-                'guiStats',
-                'hashPerf',
-                'ignoreStats',
-                'limitBandwidthInLan',
+                'version',
                 'longVersion',
-                'memorySize',
-                'memoryUsageMiB',
-                'natType',
-                'numCPU',
-                'numDevices',
-                'numFolders',
-                'overwriteRemoteDeviceNames',
                 'platform',
-                'progressEmitterEnabled',
+                'numFolders',
+                'numDevices',
+                'totFiles',
+                'folderMaxFiles',
+                'memoryUsageMiB',
+                'sha256Perf',
+                'hashPerf',
+                'memorySize',
+                'urVersion',
+                'numCPU',
+                'folderUses',
+                'deviceUses',
+                'announce',
                 'relays',
                 'rescanIntvs',
-                'restartOnWakeup',
-                'sha256Perf',
-                'temporariesCustom',
-                'temporariesDisabled',
-                'totFiles',
-                'totMiB',
-                'transportStats',
-                'uniqueID',
-                'upgradeAllowedAuto',
-                'upgradeAllowedManual',
-                'upgradeAllowedPre',
                 'uptime',
-                'urVersion',
-                'usesRateLimit',
-                'version',
+                'natType',
+                'progressEmitterEnabled',
+                'customReleaseURL',
+                'restartOnWakeup',
+                'folderUsesV3',
+                'deviceUsesV3',
+                'guiStats',
+                'blockStats',
+                'ignoreStats',
             ],
-            array_keys($this->client->getSvcReport())
+            array_keys($this->client->getSvcReport()->toArray())
         );
     }
 
@@ -227,8 +206,7 @@ class ClientTest extends Unit
     public function testGetSvcRandomString($length)
     {
         $response = $this->client->getSvcRandomString($length);
-        $this->assertTrue(array_key_exists('random', $response));
-        $this->assertEquals($length, strlen($response['random']));
+        $this->assertEquals($length, strlen($response));
     }
 
     public function getSvcRandomStringData()
@@ -243,7 +221,7 @@ class ClientTest extends Unit
     public function testPostSystemError()
     {
         $this->client->postSystemError('test');
-        $response = $this->client->getSystemError();
+        $response = $this->client->getSystemError()->toArray();
         $hasError = false;
         foreach ($response['errors'] as $error) {
             if (strpos($error['message'], 'test')) {
@@ -260,12 +238,13 @@ class ClientTest extends Unit
 
     public function testGetDbFile()
     {
-        $response = $this->client->getDbFile(self::DEFAULT_FOLDER, 'test.txt');
+        $response = $this->client->getDbFile(self::DEFAULT_FOLDER, 'test.txt')->toArray();
         $this->assertEquals(
             [
                 'availability',
                 'global',
                 'local',
+                'mtime',
             ],
             array_keys($response)
         );
@@ -297,7 +276,6 @@ class ClientTest extends Unit
     public function testGetSystemConfigInsync()
     {
         $this->assertEquals(['configInSync'], array_keys($this->client->getSystemConfigInsync()));
-
     }
 
     public function testGetEvents()
@@ -311,11 +289,11 @@ class ClientTest extends Unit
                 'type',
                 'data',
             ],
-            array_keys(current($response))
+            array_keys(current($response)->toArray())
         );
 
         $response = $this->client->getEvents(3);
-        $this->assertEquals(4, current($response)['id']);
+        $this->assertEquals(4, current($response)->id());
 
         $response = $this->client->getEvents(null, 4);
         $this->assertEquals(4, count($response));
@@ -332,20 +310,19 @@ class ClientTest extends Unit
     public function testGetStatsDevice()
     {
         $response = $this->client->getStatsDevice();
-        $this->assertTrue(array_key_exists('lastSeen', current($response)));
-
+        $this->assertTrue(array_key_exists('lastSeen', current($response)->toArray()));
     }
 
     public function testPostSystemConfig()
     {
-        $config = $this->client->getSystemConfig();
+        $config = $this->client->getSystemConfig()->toArray();
         $this->assertEquals(null, $this->client->postSystemConfig($config));
     }
 
     public function testPostDbIgnores()
     {
         $response = $this->client->postDbIgnores(self::DEFAULT_FOLDER, ['test.txt']);
-        $this->assertEquals(['expanded', 'ignore'], array_keys($response));
+        $this->assertEquals(['error', 'expanded', 'ignore'], array_keys($response));
         $this->assertCount(1, $response['ignore']);
         $this->assertCount(4, $response['expanded']);
         $this->assertEmpty($this->client->postDbIgnores(self::DEFAULT_FOLDER, [])['ignore']);
@@ -353,7 +330,7 @@ class ClientTest extends Unit
 
     public function testGetSystemLog()
     {
-        $response = $this->client->getSystemLog();
+        $response = $this->client->getSystemLog()->toArray();
         $this->assertEquals(['messages'], array_keys($response));
         $this->assertEquals(['when', 'message', 'level'], array_keys(current($response['messages'])));
     }
@@ -371,15 +348,15 @@ class ClientTest extends Unit
 
     public function testGetDbBrowse()
     {
-        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER);
-        $this->assertEquals(['test', 'test.txt'], array_keys($response));
-        $this->assertEmpty($response['test']);
-        $this->assertCount(2, $response['test.txt']);
-        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 1);
-        $this->assertEquals(['subtest.txt'], array_keys($response['test']));
-        $this->assertEquals(['subtest.txt'], array_keys($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test')));
-        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'te'));
-        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'a'));
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER)->toArray();
+        $this->assertEquals(['test', 'test.txt'], array_column($response, 'name'));
+        $this->assertCount(4, $response[1]);
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 2)->toArray();
+        $this->assertEquals(['test', 'test.txt'], array_column($response, 'name'));
+        $this->assertEquals('subtest.txt', $response[0]['children'][0]['name']);
+        $this->assertEquals(['subtest.txt'], array_column($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test')->toArray(), 'name'));
+        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'te')->toArray());
+        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'a')->toArray());
     }
 
     public function testPostSystemResume()
@@ -415,31 +392,31 @@ class ClientTest extends Unit
 
     public function testPostSystemReset()
     {
-        $this->assertTrue(array_key_exists('ok', $this->client->postSystemReset()));
-        sleep(self::RESTART_SLEEP);
-        $this->assertTrue(array_key_exists('ok', $this->client->postSystemReset(self::DEFAULT_FOLDER)));
-        sleep(self::RESTART_SLEEP);
-        $notAllowed = false;
-        try {
-            $this->client->postSystemReset(self::INVALID_FOLDER);
-        } catch (ServerException $exception) {
-            $notAllowed = true;
+        foreach ([null, self::INVALID_FOLDER] as $folder) {
+            $notAllowed = false;
+            try {
+                $this->client->postSystemReset($folder);
+            } catch (ServerException $exception) {
+                $notAllowed = true;
+            }
+            $this->assertTrue($notAllowed);
         }
-        $this->assertTrue($notAllowed);
     }
 
     public function testGetDbCompletion()
     {
-        $myId = $this->client->getSystemStatus()['myID'];
+        $myId = $this->client->getSystemStatus()->myID;
         $this->assertEquals(
             [
                 'completion',
                 'globalBytes',
+                'globalItems',
                 'needBytes',
                 'needDeletes',
                 'needItems',
+                'sequence',
             ],
-            array_keys($this->client->getDbCompletion($myId, self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbCompletion($myId, self::DEFAULT_FOLDER)->toArray())
         );
     }
 
@@ -447,10 +424,11 @@ class ClientTest extends Unit
     {
         $this->assertEquals(
             [
+                'error',
                 'expanded',
                 'ignore',
             ],
-            array_keys($this->client->getDbIgnores(self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbIgnores(self::DEFAULT_FOLDER)->toArray())
         );
     }
 
@@ -474,7 +452,7 @@ class ClientTest extends Unit
 
     public function testGetSystemDebug()
     {
-        $this->assertEquals(['enabled', 'facilities'], array_keys($this->client->getSystemDebug()));
+        $this->assertEquals(['enabled', 'facilities'], array_keys($this->client->getSystemDebug()->toArray()));
     }
 
     public function testGetSystemStatus()
@@ -487,6 +465,7 @@ class ClientTest extends Unit
                 'discoveryEnabled',
                 'discoveryErrors',
                 'discoveryMethods',
+                'discoveryStatus',
                 'goroutines',
                 'guiAddressOverridden',
                 'guiAddressUsed',
@@ -536,7 +515,7 @@ class ClientTest extends Unit
                 'stateChanged',
                 'version',
             ],
-            array_keys($this->client->getDbStatus(self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbStatus(self::DEFAULT_FOLDER)->toArray())
         );
     }
 
@@ -546,11 +525,15 @@ class ClientTest extends Unit
             [
                 'arch',
                 'codename',
+                'date',
                 'isBeta',
                 'isCandidate',
                 'isRelease',
                 'longVersion',
                 'os',
+                'stamp',
+                'tags',
+                'user',
                 'version',
             ],
             array_keys($this->client->getSystemVersion())
@@ -559,19 +542,19 @@ class ClientTest extends Unit
 
     public function testGetSystemError()
     {
-        $this->assertEquals(['errors'], array_keys($this->client->getSystemError()));
+        $this->assertEquals(['errors'], array_keys($this->client->getSystemError()->toArray()));
     }
 
     public function testGetSystemConnections()
     {
-        $this->assertEquals(['connections', 'total'], array_keys($this->client->getSystemConnections()));
+        $this->assertEquals(['connections', 'total'], array_keys($this->client->getSystemConnections()->toArray()));
     }
 
     public function testGetStatsFolder()
     {
         $response = $this->client->getStatsFolder();
-        $this->assertTrue(array_key_exists(self::DEFAULT_FOLDER, $response));
-        $this->assertEquals(['lastFile', 'lastScan'], array_keys($response[self::DEFAULT_FOLDER]));
+        $this->assertTrue(self::DEFAULT_FOLDER === current($response)->folderID());
+        $this->assertEquals(['lastFile', 'lastScan', 'folderID'], array_keys(current($response)->toArray()));
     }
 
     public function testPostSystemUpgrade()
@@ -587,35 +570,13 @@ class ClientTest extends Unit
 
     public function testGetSvcDeviceId()
     {
-        $myId = $this->client->getSystemStatus()['myID'];
-        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceId('123')));
-        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceId($myId));
+        $myId = $this->client->getSystemStatus()->myID;
+        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceId('123')->toArray()));
+        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceId($myId)->toArray());
     }
 
-    public function testPostSystemShutdown()
+    public function setUp()
     {
-        $client = Stub::makeEmptyExcept(
-            Client::class,
-            'postSystemShutdown',
-            [
-                'post' => Expected::once(
-                    function ($value) {
-                        $this->assertEquals('system/shutdown', $value);
-                    }
-                ),
-            ],
-            $this
-        );
-
-        $client->postSystemShutdown();
-    }
-
-    protected function _before()
-    {
-        $this->client = new Client('http://172.22.0.6:8384', 'mQRkYP3dhVbwz2tcVzXAGLMsNpjkrSuT');
-    }
-
-    protected function _after()
-    {
+        $this->client = new Client('http://127.0.0.1:8380', 'c180235c30a980484a512472d97f8832');
     }
 }

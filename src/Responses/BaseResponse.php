@@ -41,4 +41,9 @@ class BaseResponse
     {
         return $this->key;
     }
+
+    public function toArray()
+    {
+        return $this->response;
+    }
 }
