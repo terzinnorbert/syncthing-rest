@@ -105,6 +105,7 @@ class ClientTest extends TestCase
 
     public function testGetSystemConfig()
     {
+        $config = $this->client->getSystemConfig();
         $this->assertEquals(
             [
                 'version',
@@ -116,7 +117,7 @@ class ClientTest extends TestCase
                 'remoteIgnoredDevices',
                 'defaults',
             ],
-            array_keys($this->client->getSystemConfig())
+            array_keys($config->toArray())
         );
     }
 
@@ -140,13 +141,13 @@ class ClientTest extends TestCase
                 'queued',
                 'rest',
             ],
-            array_keys($this->client->getDbNeed(self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbNeed(self::DEFAULT_FOLDER)->toArray())
         );
 
-        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2);
+        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2)->toArray();
         $this->assertEquals(2, $response['page']);
         $this->assertEquals(65536, $response['perpage']);
-        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2, 10);
+        $response = $this->client->getDbNeed(self::DEFAULT_FOLDER, 2, 10)->toArray();
         $this->assertEquals(2, $response['page']);
         $this->assertEquals(10, $response['perpage']);
     }
@@ -194,7 +195,7 @@ class ClientTest extends TestCase
                 'blockStats',
                 'ignoreStats',
             ],
-            array_keys($this->client->getSvcReport())
+            array_keys($this->client->getSvcReport()->toArray())
         );
     }
 
@@ -205,8 +206,7 @@ class ClientTest extends TestCase
     public function testGetSvcRandomString($length)
     {
         $response = $this->client->getSvcRandomString($length);
-        $this->assertTrue(array_key_exists('random', $response));
-        $this->assertEquals($length, strlen($response['random']));
+        $this->assertEquals($length, strlen($response));
     }
 
     public function getSvcRandomStringData()
@@ -221,7 +221,7 @@ class ClientTest extends TestCase
     public function testPostSystemError()
     {
         $this->client->postSystemError('test');
-        $response = $this->client->getSystemError();
+        $response = $this->client->getSystemError()->toArray();
         $hasError = false;
         foreach ($response['errors'] as $error) {
             if (strpos($error['message'], 'test')) {
@@ -238,7 +238,7 @@ class ClientTest extends TestCase
 
     public function testGetDbFile()
     {
-        $response = $this->client->getDbFile(self::DEFAULT_FOLDER, 'test.txt');
+        $response = $this->client->getDbFile(self::DEFAULT_FOLDER, 'test.txt')->toArray();
         $this->assertEquals(
             [
                 'availability',
@@ -289,11 +289,11 @@ class ClientTest extends TestCase
                 'type',
                 'data',
             ],
-            array_keys(current($response))
+            array_keys(current($response)->toArray())
         );
 
         $response = $this->client->getEvents(3);
-        $this->assertEquals(4, current($response)['id']);
+        $this->assertEquals(4, current($response)->id());
 
         $response = $this->client->getEvents(null, 4);
         $this->assertEquals(4, count($response));
@@ -310,12 +310,12 @@ class ClientTest extends TestCase
     public function testGetStatsDevice()
     {
         $response = $this->client->getStatsDevice();
-        $this->assertTrue(array_key_exists('lastSeen', current($response)));
+        $this->assertTrue(array_key_exists('lastSeen', current($response)->toArray()));
     }
 
     public function testPostSystemConfig()
     {
-        $config = $this->client->getSystemConfig();
+        $config = $this->client->getSystemConfig()->toArray();
         $this->assertEquals(null, $this->client->postSystemConfig($config));
     }
 
@@ -330,7 +330,7 @@ class ClientTest extends TestCase
 
     public function testGetSystemLog()
     {
-        $response = $this->client->getSystemLog();
+        $response = $this->client->getSystemLog()->toArray();
         $this->assertEquals(['messages'], array_keys($response));
         $this->assertEquals(['when', 'message', 'level'], array_keys(current($response['messages'])));
     }
@@ -348,15 +348,15 @@ class ClientTest extends TestCase
 
     public function testGetDbBrowse()
     {
-        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER);
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER)->toArray();
         $this->assertEquals(['test', 'test.txt'], array_column($response, 'name'));
         $this->assertCount(4, $response[1]);
-        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 2);
+        $response = $this->client->getDbBrowse(self::DEFAULT_FOLDER, 2)->toArray();
         $this->assertEquals(['test', 'test.txt'], array_column($response, 'name'));
         $this->assertEquals('subtest.txt', $response[0]['children'][0]['name']);
-        $this->assertEquals(['subtest.txt'], array_column($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test'), 'name'));
-        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'te'));
-        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'a'));
+        $this->assertEquals(['subtest.txt'], array_column($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'test')->toArray(), 'name'));
+        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'te')->toArray());
+        $this->assertEmpty($this->client->getDbBrowse(self::DEFAULT_FOLDER, 0, 'a')->toArray());
     }
 
     public function testPostSystemResume()
@@ -405,7 +405,7 @@ class ClientTest extends TestCase
 
     public function testGetDbCompletion()
     {
-        $myId = $this->client->getSystemStatus()['myID'];
+        $myId = $this->client->getSystemStatus()->myID;
         $this->assertEquals(
             [
                 'completion',
@@ -416,7 +416,7 @@ class ClientTest extends TestCase
                 'needItems',
                 'sequence',
             ],
-            array_keys($this->client->getDbCompletion($myId, self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbCompletion($myId, self::DEFAULT_FOLDER)->toArray())
         );
     }
 
@@ -428,7 +428,7 @@ class ClientTest extends TestCase
                 'expanded',
                 'ignore',
             ],
-            array_keys($this->client->getDbIgnores(self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbIgnores(self::DEFAULT_FOLDER)->toArray())
         );
     }
 
@@ -452,7 +452,7 @@ class ClientTest extends TestCase
 
     public function testGetSystemDebug()
     {
-        $this->assertEquals(['enabled', 'facilities'], array_keys($this->client->getSystemDebug()));
+        $this->assertEquals(['enabled', 'facilities'], array_keys($this->client->getSystemDebug()->toArray()));
     }
 
     public function testGetSystemStatus()
@@ -515,7 +515,7 @@ class ClientTest extends TestCase
                 'stateChanged',
                 'version',
             ],
-            array_keys($this->client->getDbStatus(self::DEFAULT_FOLDER))
+            array_keys($this->client->getDbStatus(self::DEFAULT_FOLDER)->toArray())
         );
     }
 
@@ -542,19 +542,19 @@ class ClientTest extends TestCase
 
     public function testGetSystemError()
     {
-        $this->assertEquals(['errors'], array_keys($this->client->getSystemError()));
+        $this->assertEquals(['errors'], array_keys($this->client->getSystemError()->toArray()));
     }
 
     public function testGetSystemConnections()
     {
-        $this->assertEquals(['connections', 'total'], array_keys($this->client->getSystemConnections()));
+        $this->assertEquals(['connections', 'total'], array_keys($this->client->getSystemConnections()->toArray()));
     }
 
     public function testGetStatsFolder()
     {
         $response = $this->client->getStatsFolder();
-        $this->assertTrue(array_key_exists(self::DEFAULT_FOLDER, $response));
-        $this->assertEquals(['lastFile', 'lastScan'], array_keys($response[self::DEFAULT_FOLDER]));
+        $this->assertTrue(self::DEFAULT_FOLDER === current($response)->folderID());
+        $this->assertEquals(['lastFile', 'lastScan', 'folderID'], array_keys(current($response)->toArray()));
     }
 
     public function testPostSystemUpgrade()
@@ -570,13 +570,13 @@ class ClientTest extends TestCase
 
     public function testGetSvcDeviceId()
     {
-        $myId = $this->client->getSystemStatus()['myID'];
-        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceId('123')));
-        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceId($myId));
+        $myId = $this->client->getSystemStatus()->myID;
+        $this->assertEquals(['error'], array_keys($this->client->getSvcDeviceId('123')->toArray()));
+        $this->assertEquals(['id' => $myId], $this->client->getSvcDeviceId($myId)->toArray());
     }
 
     public function setUp()
     {
-        $this->client = new Client('http://172.22.0.6:8384', 'mQRkYP3dhVbwz2tcVzXAGLMsNpjkrSuT');
+        $this->client = new Client('http://127.0.0.1:8380', 'c180235c30a980484a512472d97f8832');
     }
 }
